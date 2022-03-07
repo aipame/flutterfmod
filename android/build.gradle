@@ -1,0 +1,76 @@
+group 'com.example.flutterfmod'
+version '1.0-SNAPSHOT'
+
+def fmod_api_root=project.file('../').absolutePath
+
+buildscript {
+    ext.kotlin_version = '1.3.50'
+    repositories {
+        google()
+        jcenter()
+    }
+
+    dependencies {
+        classpath 'com.android.tools.build:gradle:4.1.0'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+
+rootProject.allprojects {
+    repositories {
+        google()
+        jcenter()
+    }
+}
+
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+
+android {
+    compileSdkVersion 30
+
+    sourceSets {
+        main.java.srcDirs += 'src/main/kotlin'
+    }
+    defaultConfig {
+        minSdkVersion 16
+        externalNativeBuild {
+            cmake {
+                cppFlags "-std=c++11", "-fno-exceptions", "-fno-rtti", "-fexceptions"
+            }
+        }
+    }
+    buildTypes {
+        debug {
+            buildConfigField("String[]", "FMOD_LIBS", "{ \"fmodL\" }")
+            externalNativeBuild {
+                cmake {
+                    arguments '-DFMOD_API_ROOT=' + fmod_api_root,
+                            '-DFMOD_LIB_SUFFIX=L'
+                }
+            }
+        }
+        release {
+            buildConfigField("String[]", "FMOD_LIBS", "{ \"fmod\" }")
+            externalNativeBuild {
+                cmake {
+                    arguments '-DFMOD_API_ROOT=' + fmod_api_root,
+                            '-DFMOD_LIB_SUFFIX='
+                }
+            }
+        }
+    }
+    externalNativeBuild {
+        cmake {
+            path "CMakeLists.txt"
+        }
+    }
+}
+
+dependencies {
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    implementation files('libs/fmod.jar')
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.4.1"
+    implementation 'androidx.appcompat:appcompat:1.2.0'
+
+}
